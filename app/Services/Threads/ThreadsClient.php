@@ -2,8 +2,12 @@
 
 namespace App\Services\Threads;
 
+use App\Exceptions\ThreadsApiException;
+use App\Support\ThreadsSafeLogger;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ThreadsClient
@@ -41,31 +45,25 @@ class ThreadsClient
             return $this->mockMe();
         }
 
-        $response = $this->http()->get($this->baseUrl().'/me', [
+        return $this->getJson($this->baseUrl().'/me', [
             'fields' => 'id,username,name,threads_profile_picture_url,threads_biography,is_verified',
             'access_token' => $accessToken,
         ]);
-
-        $response->throw();
-
-        return $response->json();
     }
 
-    public function getUserThreads(string $accessToken): array
+    public function getUserThreads(string $accessToken, int $limit = 25): array
     {
         if ($this->isMock()) {
             return $this->mockUserThreads();
         }
 
-        // TODO: Confirm pagination and field names with Threads API docs.
-        $response = $this->http()->get($this->baseUrl().'/me/threads', [
-            'fields' => 'id,text,media_type,permalink,timestamp',
+        $response = $this->getJson($this->baseUrl().'/me/threads', [
+            'fields' => 'id,text,timestamp,permalink,media_type,media_url,shortcode,is_quote_post',
+            'limit' => $limit,
             'access_token' => $accessToken,
         ]);
 
-        $response->throw();
-
-        return $response->json('data', []);
+        return $response['data'] ?? [];
     }
 
     public function getAccountInsights(string $accessToken): array
@@ -74,15 +72,12 @@ class ThreadsClient
             return $this->mockAccountInsights();
         }
 
-        // TODO: Map insight metrics to our snapshot fields once API access is approved.
-        $response = $this->http()->get($this->baseUrl().'/me/threads_insights', [
+        $response = $this->getJson($this->baseUrl().'/me/threads_insights', [
             'metric' => 'views,likes,replies,reposts,quotes,clicks,followers_count',
             'access_token' => $accessToken,
         ]);
 
-        $response->throw();
-
-        return $response->json('data', []);
+        return $response['data'] ?? [];
     }
 
     public function getMediaInsights(string $mediaId, string $accessToken): array
@@ -91,15 +86,43 @@ class ThreadsClient
             return $this->mockMediaInsights($mediaId);
         }
 
-        // TODO: Confirm media insights endpoint and metrics.
-        $response = $this->http()->get($this->baseUrl()."/{$mediaId}/insights", [
+        $response = $this->getJson($this->baseUrl()."/{$mediaId}/insights", [
             'metric' => 'views,likes,replies,reposts,quotes',
             'access_token' => $accessToken,
         ]);
 
-        $response->throw();
+        return $response['data'] ?? [];
+    }
 
-        return $response->json('data', []);
+    /**
+     * @param  array<string, mixed>  $query
+     * @return array<string, mixed>
+     */
+    protected function getJson(string $url, array $query): array
+    {
+        $response = $this->http()->retry(2, 200, throw: false)->get($url, $query);
+
+        if ($response->failed()) {
+            $this->throwApiException($response);
+        }
+
+        $json = $response->json();
+
+        return is_array($json) ? $json : [];
+    }
+
+    protected function throwApiException(Response $response): never
+    {
+        $summary = ThreadsSafeLogger::summarizeMetaError($response);
+
+        Log::error('Threads API request failed', $summary);
+
+        throw new ThreadsApiException(
+            is_string($summary['message'] ?? null) ? $summary['message'] : 'Erro na API do Threads.',
+            $response->status(),
+            is_string($summary['fbtrace_id'] ?? null) ? $summary['fbtrace_id'] : null,
+            $summary,
+        );
     }
 
     protected function mockMe(): array
@@ -128,6 +151,9 @@ class ThreadsClient
                 'media_type' => 'TEXT_POST',
                 'permalink' => 'https://www.threads.net/@mock/post/'.$id,
                 'timestamp' => now()->subDays($i)->toIso8601String(),
+                'media_url' => null,
+                'shortcode' => Str::random(8),
+                'is_quote_post' => false,
             ];
         }
 

@@ -24,6 +24,10 @@ Route::prefix('auth/threads')->name('auth.threads.')->group(function () {
 
 Route::post('/webhooks/meta/deauthorize', [ThreadsWebhookController::class, 'deauthorize'])
     ->name('webhooks.meta.deauthorize');
+Route::post('/webhooks/meta/data-deletion', [ThreadsWebhookController::class, 'dataDeletion'])
+    ->name('webhooks.meta.data-deletion');
+Route::get('/data-deletion/status/{confirmationCode}', [LegalController::class, 'dataDeletionStatus'])
+    ->name('legal.data-deletion.status');
 
 Route::get('/resultado', [ResultController::class, 'show'])->name('result.show');
 Route::post('/resultado/recalcular', [ResultController::class, 'recalculate'])->name('result.recalculate');

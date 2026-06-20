@@ -2,9 +2,11 @@
 
 namespace App\Services\Threads;
 
+use App\Exceptions\ThreadsApiException;
 use App\Models\ThreadsAccount;
 use App\Models\ThreadsProfileSnapshot;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 
 class ThreadsMetricsCollector
 {
@@ -20,7 +22,7 @@ class ThreadsMetricsCollector
             throw new \RuntimeException('Conta Threads sem access token.');
         }
 
-        $insights = $this->client->getAccountInsights($accessToken);
+        $insights = $this->fetchAccountInsights($accessToken);
         $threads = $this->client->getUserThreads($accessToken);
 
         $metrics = $this->parseInsights($insights);
@@ -44,6 +46,27 @@ class ThreadsMetricsCollector
         return $snapshot;
     }
 
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    protected function fetchAccountInsights(string $accessToken): array
+    {
+        try {
+            return $this->client->getAccountInsights($accessToken);
+        } catch (ThreadsApiException $e) {
+            Log::warning('Threads account insights unavailable', [
+                'status' => $e->statusCode,
+                'request_id' => $e->requestId,
+                'error' => $e->errorSummary,
+            ]);
+
+            return [];
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $threadData
+     */
     protected function syncPost(ThreadsAccount $account, array $threadData, string $accessToken): void
     {
         $mediaId = $threadData['id'] ?? null;
@@ -64,8 +87,7 @@ class ThreadsMetricsCollector
             ]
         );
 
-        $insights = $this->client->getMediaInsights($mediaId, $accessToken);
-        $metrics = $this->parseInsights($insights);
+        $metrics = $this->fetchMediaInsights((string) $mediaId, $accessToken);
 
         $post->snapshots()->create([
             'views' => $metrics['views'],
@@ -75,6 +97,25 @@ class ThreadsMetricsCollector
             'quotes' => $metrics['quotes'],
             'captured_at' => now(),
         ]);
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    protected function fetchMediaInsights(string $mediaId, string $accessToken): array
+    {
+        try {
+            return $this->parseInsights($this->client->getMediaInsights($mediaId, $accessToken));
+        } catch (ThreadsApiException $e) {
+            Log::warning('Threads media insights unavailable', [
+                'media_id' => $mediaId,
+                'status' => $e->statusCode,
+                'request_id' => $e->requestId,
+                'error' => $e->errorSummary,
+            ]);
+
+            return $this->parseInsights([]);
+        }
     }
 
     /**

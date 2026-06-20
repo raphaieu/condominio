@@ -20,4 +20,11 @@ class LegalController extends Controller
     {
         return view('legal.data-deletion');
     }
+
+    public function dataDeletionStatus(string $confirmationCode): View
+    {
+        return view('legal.data-deletion-status', [
+            'confirmationCode' => $confirmationCode,
+        ]);
+    }
 }

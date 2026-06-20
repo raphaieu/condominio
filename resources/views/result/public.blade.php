@@ -2,6 +2,19 @@
 
 @section('title', '@'.$account->username.' no Condominio Threads')
 
+@section('meta_description', '@'.$account->username.' conquistou um '.$result->property_type.' no '.$result->neighborhood.' com score '.number_format($result->score, 0).' no Condominio Threads.')
+
+@section('meta_og')
+    <meta property="og:title" content="@{{ $account->username }} — {{ $result->property_type }}">
+    <meta property="og:description" content="Score {{ number_format($result->score, 0) }} · {{ $result->neighborhood }} · {{ $result->formattedEstimatedValue() }} simbólicos">
+    <meta property="og:type" content="profile">
+    <meta property="og:url" content="{{ route('result.public', $account->username) }}">
+    @if ($account->avatar_url)
+        <meta property="og:image" content="{{ $account->avatar_url }}">
+    @endif
+    <meta name="twitter:card" content="summary">
+@endsection
+
 @section('content')
 <section class="max-w-4xl mx-auto px-4 py-12" x-data="{ copied: false }">
     <div class="text-center mb-10">

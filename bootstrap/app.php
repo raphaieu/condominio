@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->validateCsrfTokens(except: [
             'webhooks/meta/deauthorize',
+            'webhooks/meta/data-deletion',
             'webhooks/mercado-pago',
         ]);
     })

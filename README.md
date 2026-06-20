@@ -76,6 +76,78 @@ Com `MERCADO_PAGO_MOCK=true`:
 2. Clique em **Pagar com Pix**
 3. QR Code e copia-e-cola fake serão exibidos em `/checkout/status/{order}`
 
+## OAuth real com Threads (`THREADS_MOCK=false`)
+
+Configure no `.env`:
+
+```env
+THREADS_MOCK=false
+THREADS_APP_ID=seu_app_id
+THREADS_APP_SECRET=seu_app_secret
+THREADS_REDIRECT_URI=https://SEU_DOMINIO/auth/threads/callback
+THREADS_GRAPH_BASE=https://graph.threads.net/v1.0
+```
+
+Escopos usados: `threads_basic`, `threads_manage_insights`.
+
+### Desenvolvimento local com Cloudflare Tunnel
+
+A Meta **não aceita** `localhost` como `redirect_uri`. Use um túnel HTTPS com subdomínio estável:
+
+1. Suba o Laravel:
+
+```bash
+php artisan serve --host=0.0.0.0 --port=8000
+```
+
+2. Em outro terminal, suba o túnel:
+
+```bash
+cloudflared tunnel --url http://localhost:8000
+```
+
+Para desenvolvimento contínuo, prefira um subdomínio fixo (ex.: `https://condominio-dev.raphai.eu`) em vez da URL aleatória do túnel rápido — assim você não precisa atualizar o painel Meta a cada sessão.
+
+3. Configure o `.env` local:
+
+```env
+APP_URL=https://condominio-dev.raphai.eu
+THREADS_REDIRECT_URI=https://condominio-dev.raphai.eu/auth/threads/callback
+THREADS_MOCK=false
+```
+
+4. Cadastre **ambas** as URLs de callback no Meta App (produção + dev).
+
+### Health check
+
+Produção:
+
+```bash
+curl https://condominio.raphai.eu/health
+```
+
+Local com tunnel:
+
+```bash
+curl https://condominio-dev.raphai.eu/health
+```
+
+Resposta esperada: `{"status":"ok"}`
+
+### Checklist de teste OAuth real
+
+1. `THREADS_MOCK=false`
+2. `THREADS_APP_ID` preenchido
+3. `THREADS_APP_SECRET` preenchido
+4. `THREADS_REDIRECT_URI` **idêntico** ao cadastrado na Meta
+5. Callback de produção cadastrado: `https://condominio.raphai.eu/auth/threads/callback`
+6. Callback dev cadastrado (se usar tunnel): `https://condominio-dev.raphai.eu/auth/threads/callback`
+7. Usuário de teste adicionado no Meta App, se necessário
+8. Clicar em **Entrar com Threads**
+9. Autorizar no Threads
+10. Voltar para `/resultado`
+11. Confirmar dados em `threads_accounts`, `threads_profile_snapshots`, `condominium_results`
+
 ## URLs para cadastrar no Meta App
 
 Substitua `SEU_DOMINIO` pela URL de produção:
@@ -87,6 +159,7 @@ Substitua `SEU_DOMINIO` pela URL de produção:
 | Exclusão de dados | `https://SEU_DOMINIO/data-deletion` |
 | OAuth Redirect URI | `https://SEU_DOMINIO/auth/threads/callback` |
 | Deauthorize Callback | `https://SEU_DOMINIO/webhooks/meta/deauthorize` |
+| Data Deletion Callback | `https://SEU_DOMINIO/webhooks/meta/data-deletion` |
 
 ## URLs Mercado Pago
 
@@ -105,7 +178,9 @@ Substitua `SEU_DOMINIO` pela URL de produção:
 | GET | `/health` | Health check JSON |
 | GET | `/auth/threads/redirect` | Inicia OAuth Threads |
 | GET | `/auth/threads/callback` | Callback OAuth |
-| POST | `/webhooks/meta/deauthorize` | Webhook Meta |
+| POST | `/webhooks/meta/deauthorize` | Webhook Meta (desautorização) |
+| POST | `/webhooks/meta/data-deletion` | Webhook Meta (exclusão de dados) |
+| GET | `/data-deletion/status/{code}` | Status da solicitação de exclusão |
 | GET | `/resultado` | Resultado do usuário |
 | POST | `/resultado/recalcular` | Recalcula score |
 | GET | `/u/{username}` | Página pública |

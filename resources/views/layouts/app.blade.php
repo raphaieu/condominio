@@ -3,7 +3,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Condominio Threads — descubra seu imóvel simbólico com base nas suas métricas do Threads.">
+    <meta name="description" content="@yield('meta_description', 'Condominio Threads — descubra seu imóvel simbólico com base nas suas métricas do Threads.')">
+
+    @hasSection('meta_og')
+        @yield('meta_og')
+    @else
+        <meta property="og:title" content="@yield('title', config('app.name'))">
+        <meta property="og:description" content="@yield('meta_description', 'Condominio Threads — descubra seu imóvel simbólico com base nas suas métricas do Threads.')">
+        <meta property="og:type" content="website">
+        <meta property="og:url" content="{{ url()->current() }}">
+    @endif
 
     <title>@yield('title', config('app.name'))</title>
 
