@@ -178,6 +178,8 @@ Não há networks customizadas — o Coolify gerencia rede e proxy reverso.
 | `APP_KEY` | Chave Laravel (`php artisan key:generate --show`) |
 | `POSTGRES_PASSWORD` | Senha do banco (mesma para app e postgres) |
 
+> **HTTPS / assets:** use `APP_URL` com `https://`. O app confia no proxy do Coolify e força HTTPS nas URLs geradas. Se CSS/JS carregarem via HTTP (mixed content), confira `APP_URL` e rode `php artisan optimize:clear && php artisan optimize` no container.
+
 ### Variáveis opcionais (com defaults)
 
 | Variável | Default | Descrição |
