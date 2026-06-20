@@ -142,7 +142,11 @@ Resposta esperada: `{"status":"ok"}`
 4. `THREADS_REDIRECT_URI` **idêntico** ao cadastrado na Meta
 5. Callback de produção cadastrado: `https://condominio.raphai.eu/auth/threads/callback`
 6. Callback dev cadastrado (se usar tunnel): `https://condominio-dev.raphai.eu/auth/threads/callback`
-7. Usuário de teste adicionado no Meta App, se necessário
+7. **Usuário de teste adicionado no Meta App** (obrigatório enquanto o app estiver em modo desenvolvimento):
+   - Meta Developers → seu app → **App roles** → **Roles** → **Add people** → função **Tester**
+   - Ou em **Use cases** → **Access the Threads API** → adicionar **Threads Testers**
+   - O usuário precisa **aceitar o convite** (notificação no Threads/Instagram/Facebook)
+   - Sem isso, a API retorna: *"requires the threads_basic permission... Threads testers"*
 8. Clicar em **Entrar com Threads**
 9. Autorizar no Threads
 10. Voltar para `/resultado`

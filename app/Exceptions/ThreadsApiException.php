@@ -21,6 +21,16 @@ class ThreadsApiException extends RuntimeException
 
     public function userMessage(): string
     {
+        $message = is_string($this->errorSummary['message'] ?? null)
+            ? $this->errorSummary['message']
+            : '';
+
+        if (str_contains($message, 'threads_basic') || str_contains($message, 'Threads testers')) {
+            return 'Seu usuário ainda não tem acesso de teste ao app na Meta. '
+                .'Peça ao administrador do app para adicioná-lo como testador do Threads '
+                .'e aceite o convite antes de tentar novamente.';
+        }
+
         return match ($this->statusCode) {
             400 => 'Não foi possível processar a autorização. Tente conectar novamente.',
             401, 403 => 'Acesso negado pela API do Threads. Verifique as permissões do app.',
