@@ -2,7 +2,7 @@
 
 Experiência viral/social onde o usuário conecta sua conta Threads, a aplicação coleta métricas disponíveis via API, calcula um score simbólico e gera um resultado lúdico: tipo de imóvel, bairro, endereço simbólico, classe social digital e valor estimado do imóvel.
 
-Stack: **Laravel 13** · **Blade** · **Tailwind CSS 4** · **Alpine.js** · **SQLite/MySQL/PostgreSQL** · **Queue (database driver)**
+Stack: **Laravel 13** · **Blade** · **Tailwind CSS 4** · **Alpine.js** · **SQLite/MySQL/PostgreSQL** · **Queue (`database` local / `sync` Docker)**
 
 ## Requisitos
 
@@ -142,6 +142,116 @@ php artisan view:cache
 ```
 
 Configure `THREADS_MOCK=false` e `MERCADO_PAGO_MOCK=false` quando tiver credenciais reais.
+
+## Deploy no Coolify (Docker Compose)
+
+A aplicação inclui `docker-compose.yml` pronto para deploy no [Coolify](https://coolify.io) com **PHP 8.3 + Nginx + PHP-FPM** (container `app`, porta 80) e **PostgreSQL 16** (container `postgres`).
+
+Não há networks customizadas — o Coolify gerencia rede e proxy reverso.
+
+### Arquivos Docker
+
+| Arquivo | Função |
+|---------|--------|
+| `Dockerfile` | Build multi-stage: npm, composer, imagem final com Nginx + PHP-FPM + Supervisor |
+| `docker-compose.yml` | Serviços `app` e `postgres` |
+| `docker/nginx.conf` | Virtual host Laravel (`public/`) |
+| `docker/supervisord.conf` | Gerencia Nginx e PHP-FPM |
+| `docker/php.ini` | OPcache e limites PHP para produção |
+| `docker/entrypoint.sh` | Permissões de `storage/` e default de `THREADS_REDIRECT_URI` |
+| `.dockerignore` | Contexto de build enxuto |
+
+### Passo a passo no Coolify
+
+1. Crie um novo recurso **Docker Compose** apontando para este repositório.
+2. O Coolify detectará o `docker-compose.yml` na raiz.
+3. Configure o domínio público no serviço **`app`** (porta interna **80**).
+4. Defina as variáveis de ambiente obrigatórias (aba Environment).
+5. Faça o deploy (build + start dos containers).
+6. Execute os **comandos pós-deploy** no container `app` (ver abaixo).
+
+### Variáveis obrigatórias
+
+| Variável | Descrição |
+|----------|-----------|
+| `APP_URL` | URL pública com HTTPS (ex: `https://condominio.example.com`) |
+| `APP_KEY` | Chave Laravel (`php artisan key:generate --show`) |
+| `POSTGRES_PASSWORD` | Senha do banco (mesma para app e postgres) |
+
+### Variáveis opcionais (com defaults)
+
+| Variável | Default | Descrição |
+|----------|---------|-----------|
+| `APP_ENV` | `production` | Ambiente |
+| `APP_DEBUG` | `false` | Debug |
+| `POSTGRES_DB` | `condominio_threads` | Nome do banco |
+| `POSTGRES_USER` | `condominio` | Usuário do banco |
+| `THREADS_MOCK` | `true` | Mock da API Threads |
+| `MERCADO_PAGO_MOCK` | `true` | Mock do Pix |
+| `QUEUE_CONNECTION` | `sync` | Sem worker no MVP |
+| `THREADS_REDIRECT_URI` | `{APP_URL}/auth/threads/callback` | Definido automaticamente no entrypoint se vazio |
+
+### Variáveis Threads API (quando sair do mock)
+
+| Variável | Descrição |
+|----------|-----------|
+| `THREADS_APP_ID` | App ID Meta/Threads |
+| `THREADS_APP_SECRET` | App Secret |
+| `THREADS_GRAPH_BASE` | `https://graph.threads.net/v1.0` |
+| `THREADS_MOCK` | `false` |
+
+### Variáveis Mercado Pago (quando sair do mock)
+
+| Variável | Descrição |
+|----------|-----------|
+| `MERCADO_PAGO_ACCESS_TOKEN` | Token de acesso |
+| `MERCADO_PAGO_PUBLIC_KEY` | Chave pública |
+| `MERCADO_PAGO_WEBHOOK_SECRET` | Secret do webhook |
+| `MERCADO_PAGO_PREMIUM_PRICE` | `9.90` |
+| `MERCADO_PAGO_MOCK` | `false` |
+
+### Comandos pós-deploy
+
+Execute **no container `app`** após o primeiro deploy (ou via Coolify → Execute Command):
+
+```bash
+php artisan migrate --force
+php artisan optimize:clear
+php artisan optimize
+```
+
+Repita `migrate --force` sempre que houver novas migrations.
+
+### Health check
+
+Confirme que a aplicação responde:
+
+```bash
+curl -s https://SEU_DOMINIO/health
+# {"status":"ok"}
+```
+
+### Build local (teste)
+
+```bash
+export APP_KEY=base64:$(openssl rand -base64 32)
+export APP_URL=http://localhost
+export POSTGRES_PASSWORD=secret
+
+docker compose up --build -d
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan optimize:clear
+docker compose exec app php artisan optimize
+```
+
+### O que o Dockerfile faz no build
+
+1. `npm install` + `npm run build` (assets Vite/Tailwind)
+2. `composer install --no-dev` + `composer dump-autoload --optimize`
+3. Configura permissões de `storage/` e `bootstrap/cache/`
+4. Inicia **Nginx** e **PHP-FPM** via **Supervisor** na porta 80
+
+Sem Redis, Horizon, queue worker ou scheduler neste MVP.
 
 ## Licença
 
