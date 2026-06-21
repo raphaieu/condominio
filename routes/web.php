@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\MercadoPagoWebhookController;
 use App\Http\Controllers\PremiumController;
+use App\Http\Controllers\PremiumImageController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\ThreadsAuthController;
 use App\Http\Controllers\ThreadsWebhookController;
@@ -34,8 +35,16 @@ Route::post('/resultado/recalcular', [ResultController::class, 'recalculate'])->
 Route::get('/u/{username}', [ResultController::class, 'public'])->name('result.public');
 
 Route::get('/premium', [PremiumController::class, 'show'])->name('premium.show');
+
+Route::middleware('threads.session')->group(function () {
+    Route::post('/premium/image/generate', [PremiumImageController::class, 'generate'])->name('premium.image.generate');
+    Route::get('/premium/image/status', [PremiumImageController::class, 'status'])->name('premium.image.status');
+    Route::post('/premium/image/retry', [PremiumImageController::class, 'retry'])->name('premium.image.retry');
+});
+
 Route::post('/checkout/pix', [CheckoutController::class, 'createPix'])->name('checkout.pix');
 Route::get('/checkout/status/{order}', [CheckoutController::class, 'status'])->name('checkout.status');
+Route::post('/checkout/confirm/{order}', [CheckoutController::class, 'confirmMockPayment'])->name('checkout.confirm');
 
 Route::post('/webhooks/mercado-pago', [MercadoPagoWebhookController::class, 'handle'])
     ->name('webhooks.mercado-pago');

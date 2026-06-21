@@ -1,18 +1,37 @@
 @extends('layouts.app')
 
-@section('title', '@'.$account->username.' no Condomínio Threads')
+@section('title', $shareMeta['title'])
 
-@section('meta_description', '@'.$account->username.' conquistou um '.$result->property_type.' no '.$result->neighborhood.' com score '.number_format($result->score, 0).' no Condomínio Threads.')
+@section('meta_description', $shareMeta['description'])
 
 @section('meta_og')
-    <meta property="og:title" content="{{ '@' . $account->username }} — {{ $result->property_type }}">
-    <meta property="og:description" content="Score {{ number_format($result->score, 0) }} · {{ $result->neighborhood }} · {{ $result->formattedEstimatedValue() }} simbólicos">
-    <meta property="og:type" content="profile">
+    <meta property="og:title" content="{{ $shareMeta['title'] }}">
+    <meta property="og:description" content="{{ $shareMeta['description'] }}">
+    <meta property="og:type" content="website">
     <meta property="og:url" content="{{ route('result.public', $account->username) }}">
-    @if ($account->avatar_url)
-        <meta property="og:image" content="{{ $account->avatar_url }}">
+    <meta property="og:site_name" content="{{ config('app.name') }}">
+    <meta property="og:locale" content="pt_BR">
+
+    @if ($shareMeta['image'])
+        <meta property="og:image" content="{{ $shareMeta['image'] }}">
+        @if ($shareMeta['image_alt'])
+            <meta property="og:image:alt" content="{{ $shareMeta['image_alt'] }}">
+        @endif
+        @if ($shareMeta['image_width'] && $shareMeta['image_height'])
+            <meta property="og:image:width" content="{{ $shareMeta['image_width'] }}">
+            <meta property="og:image:height" content="{{ $shareMeta['image_height'] }}">
+        @endif
     @endif
-    <meta name="twitter:card" content="summary">
+
+    <meta name="twitter:card" content="{{ $shareMeta['twitter_card'] }}">
+    <meta name="twitter:title" content="{{ $shareMeta['title'] }}">
+    <meta name="twitter:description" content="{{ $shareMeta['description'] }}">
+    @if ($shareMeta['image'])
+        <meta name="twitter:image" content="{{ $shareMeta['image'] }}">
+        @if ($shareMeta['image_alt'])
+            <meta name="twitter:image:alt" content="{{ $shareMeta['image_alt'] }}">
+        @endif
+    @endif
 @endsection
 
 @section('content')
@@ -34,6 +53,20 @@
             <p class="text-condo-text-muted text-sm">score no condomínio</p>
         </div>
 
+        @if ($facadeAsset ?? null)
+            <div class="relative px-4 sm:px-8 pb-8 border-b border-condo-border">
+                <p class="text-xs text-condo-text-muted uppercase text-center mb-4 tracking-wider">Minha casa</p>
+                <div class="rounded-2xl overflow-hidden border border-condo-border bg-black/30 max-w-sm mx-auto shadow-lg shadow-condo-gold/10">
+                    <img
+                        src="{{ $facadeAsset->url() }}"
+                        alt="Casa de {{ '@' . $account->username }} no Condomínio Threads"
+                        class="w-full h-auto object-cover"
+                        loading="lazy"
+                    >
+                </div>
+            </div>
+        @endif
+
         <div class="relative grid sm:grid-cols-2 gap-6 py-8 text-center sm:text-left">
             <div class="sm:text-center">
                 <p class="text-xs text-condo-text-muted uppercase">Imóvel</p>
@@ -44,7 +77,7 @@
                 <p class="text-lg font-semibold">{{ $result->neighborhood }}</p>
             </div>
             <div class="sm:col-span-2 text-center">
-                <p class="text-xs text-condo-text-muted uppercase">Endereço simbólico</p>
+                <p class="text-xs text-condo-text-muted uppercase">Endereço</p>
                 <p class="text-condo-text-secondary mt-1">{{ $result->symbolic_address }}</p>
             </div>
             <div class="sm:text-center">
@@ -52,18 +85,12 @@
                 <p class="font-medium">{{ $result->social_class }}</p>
             </div>
             <div class="sm:text-center">
-                <p class="text-xs text-condo-text-muted uppercase">Valor simbólico</p>
+                <p class="text-xs text-condo-text-muted uppercase">Valor estimado</p>
                 <p class="text-xl font-heading font-bold text-condo-gold">{{ $result->formattedEstimatedValue() }}</p>
             </div>
         </div>
 
-        @if ($result->description)
-            <p class="text-center text-condo-text-secondary text-sm italic px-4 pb-6">{{ $result->description }}</p>
-        @endif
-
-        <div class="text-center space-y-4">
-            <p class="text-xs text-condo-text-muted">Classificação simbólica e recreativa · Condomínio Threads</p>
-
+        <div class="text-center space-y-4 pb-2">
             <button
                 type="button"
                 @click="navigator.clipboard.writeText(window.location.href); copied = true; setTimeout(() => copied = false, 2000)"

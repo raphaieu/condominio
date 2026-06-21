@@ -34,7 +34,7 @@ services:
       SESSION_DRIVER: database
       SESSION_LIFETIME: ${SESSION_LIFETIME:-120}
       CACHE_STORE: database
-      QUEUE_CONNECTION: sync
+      QUEUE_CONNECTION: ${QUEUE_CONNECTION:-database}
 
       MAIL_MAILER: ${MAIL_MAILER:-log}
       MAIL_FROM_ADDRESS: ${MAIL_FROM_ADDRESS:-rapha@raphael-martins.com}

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\GeneratedAsset;
 use App\Models\ThreadsAccount;
 use App\Services\CondominiumResultService;
+use App\Support\PublicResultShare;
 use App\Support\SessionContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -51,12 +53,20 @@ class ResultController extends Controller
 
         $result = $account->condominiumResults()
             ->where('is_public', true)
+            ->with([
+                'latestCompletedGeneration.generatedAssets' => fn ($query) => $query
+                    ->where('type', GeneratedAsset::TYPE_FACADE),
+            ])
             ->latest('generated_at')
             ->firstOrFail();
+
+        $facadeAsset = $result->facadeAsset();
 
         return view('result.public', [
             'account' => $account,
             'result' => $result,
+            'facadeAsset' => $facadeAsset,
+            'shareMeta' => PublicResultShare::meta($account, $result, $facadeAsset),
         ]);
     }
 }

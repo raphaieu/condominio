@@ -17,6 +17,10 @@
     <button type="submit" {{ $attributes->merge(['class' => $classes]) }}>
         {{ $slot }}
     </button>
+@elseif ($type === 'button')
+    <button type="button" {{ $attributes->merge(['class' => $classes]) }}>
+        {{ $slot }}
+    </button>
 @else
     <a href="{{ $href }}" {{ $attributes->merge(['class' => $classes]) }}>
         {{ $slot }}

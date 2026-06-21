@@ -3,13 +3,7 @@
 @section('title', 'Aguardando Pagamento — Condomínio Threads')
 
 @section('content')
-<section class="max-w-lg mx-auto px-6 py-12" x-data="{
-    copied: false,
-    status: '{{ $order->status }}',
-    poll() {
-        if (this.status === 'paid') return;
-    }
-}">
+<section class="max-w-lg mx-auto px-6 py-12" x-data="{ copied: false }">
     <x-card class="text-center space-y-6">
         <div>
             <p class="app-section-label mb-2">Pagamento Pix</p>
@@ -25,9 +19,11 @@
 
         @if ($order->isPaid())
             <div class="rounded-xl bg-condo-accent-green/20 border border-condo-accent-green/30 p-6">
-                <p class="text-green-200">Seu pagamento foi recebido. Em breve você receberá sua imagem premium!</p>
+                <p class="text-green-200">Seu pagamento foi recebido. Sua casa está sendo gerada!</p>
             </div>
-            <x-button href="{{ route('result.show') }}" variant="primary">Voltar ao resultado</x-button>
+            <x-button href="{{ route('premium.show', ['generating' => 1]) }}" variant="gold">
+                Ver minha casa
+            </x-button>
         @elseif ($payment)
             @if ($payment->pix_qr_code_base64)
                 <div class="mx-auto w-48 h-48 rounded-xl bg-white p-3">
@@ -64,6 +60,15 @@
                     <p class="font-semibold mb-1 text-condo-gold">Modo mock ativo</p>
                     <p>Este é um QR Code e código Pix simulados para testes. Nenhum pagamento real será processado.</p>
                 </div>
+            @endif
+
+            @if ($canConfirmMock)
+                <form action="{{ route('checkout.confirm', $order) }}" method="POST" class="pt-2">
+                    @csrf
+                    <x-button type="submit" variant="gold" class="w-full">
+                        Confirmar pagamento (teste)
+                    </x-button>
+                </form>
             @endif
 
             <div class="flex items-center justify-center gap-2 text-condo-text-muted text-sm">

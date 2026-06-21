@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CondominiumResult extends Model
 {
@@ -44,6 +45,50 @@ class CondominiumResult extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function premiumUnlocks(): HasMany
+    {
+        return $this->hasMany(PremiumUnlock::class);
+    }
+
+    public function imageGenerations(): HasMany
+    {
+        return $this->hasMany(ImageGeneration::class);
+    }
+
+    public function latestImageGeneration(): HasOne
+    {
+        return $this->hasOne(ImageGeneration::class)->latestOfMany();
+    }
+
+    public function latestCompletedGeneration(): HasOne
+    {
+        return $this->hasOne(ImageGeneration::class)
+            ->where('status', ImageGeneration::STATUS_COMPLETED)
+            ->latestOfMany();
+    }
+
+    public function generatedAssets(): HasMany
+    {
+        return $this->hasMany(GeneratedAsset::class);
+    }
+
+    public function facadeAsset(): ?GeneratedAsset
+    {
+        $generation = $this->relationLoaded('latestCompletedGeneration')
+            ? $this->latestCompletedGeneration
+            : $this->latestCompletedGeneration()->first();
+
+        if (! $generation) {
+            return null;
+        }
+
+        $assets = $generation->relationLoaded('generatedAssets')
+            ? $generation->generatedAssets
+            : $generation->generatedAssets()->get();
+
+        return $assets->firstWhere('type', GeneratedAsset::TYPE_FACADE);
     }
 
     public function formattedEstimatedValue(): string

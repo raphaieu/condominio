@@ -41,6 +41,21 @@ class User extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function premiumUnlocks(): HasMany
+    {
+        return $this->hasMany(PremiumUnlock::class);
+    }
+
+    public function imageGenerations(): HasMany
+    {
+        return $this->hasMany(ImageGeneration::class);
+    }
+
+    public function generatedAssets(): HasMany
+    {
+        return $this->hasMany(GeneratedAsset::class);
+    }
+
     public function activeThreadsAccount(): HasOne
     {
         return $this->hasOne(ThreadsAccount::class)->whereNull('disconnected_at')->latest();

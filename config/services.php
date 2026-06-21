@@ -52,4 +52,17 @@ return [
         'premium_price' => env('MERCADO_PAGO_PREMIUM_PRICE', 9.90),
     ],
 
+    'premium_image' => [
+        'test_mode' => filter_var(env('PREMIUM_IMAGE_TEST_MODE', false), FILTER_VALIDATE_BOOLEAN),
+        'provider' => env('IMAGE_PROVIDER', 'mock'),
+        'disk' => env('IMAGE_GENERATION_DISK', 'public'),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'image_model' => env('OPENAI_IMAGE_MODEL', 'gpt-image-1'),
+        'image_size' => env('OPENAI_IMAGE_SIZE', '1024x1536'),
+        'image_quality' => env('OPENAI_IMAGE_QUALITY', 'medium'),
+    ],
+
 ];

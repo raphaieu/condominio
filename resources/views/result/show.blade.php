@@ -69,7 +69,7 @@
             @endif
 
             <x-button href="{{ route('premium.show') }}" variant="gold">
-                Liberar versão premium
+                Gerar minha casa com IA
             </x-button>
 
             <form action="{{ route('result.recalculate') }}" method="POST">

@@ -30,6 +30,7 @@ npm install
 npm run build
 
 php artisan migrate
+php artisan storage:link
 php artisan db:seed --class=DemoSeeder  # opcional
 
 php artisan serve
@@ -53,6 +54,15 @@ Acesse: http://localhost:8000
 | `MERCADO_PAGO_MOCK` | `true` gera Pix fake para testes |
 | `MERCADO_PAGO_PREMIUM_PRICE` | Preço da versão premium (padrão: 9.90) |
 | `QUEUE_CONNECTION` | `database` (padrão) |
+| `PREMIUM_IMAGE_TEST_MODE` | `true` libera geração sem pagamento |
+| `IMAGE_PROVIDER` | `mock` (padrão) ou `openai` |
+| `OPENAI_API_KEY` | Chave da API OpenAI (quando `IMAGE_PROVIDER=openai`) |
+| `OPENAI_IMAGE_MODEL` | Modelo de imagem (padrão: `gpt-image-1`; alternativas: `gpt-image-1.5`, `gpt-image-1-mini`) |
+| `OPENAI_IMAGE_SIZE` | Tamanho (padrão: `1024x1536`) |
+| `OPENAI_IMAGE_QUALITY` | Qualidade GPT Image: `low`, `medium`, `high` (padrão: `medium`) |
+| `IMAGE_GENERATION_DISK` | Disco de storage (`public` padrão) |
+
+> **Share cards (story/feed):** requer extensão PHP `gd` para composição. Sem GD, a fachada é gerada normalmente.
 
 ## Migrations
 
@@ -73,8 +83,23 @@ Com `THREADS_MOCK=true` no `.env`:
 Com `MERCADO_PAGO_MOCK=true`:
 
 1. Gere um resultado e acesse `/premium`
-2. Clique em **Pagar com Pix**
+2. Clique em **Pagar com Pix para gerar minha casa**
 3. QR Code e copia-e-cola fake serão exibidos em `/checkout/status/{order}`
+4. Clique em **Confirmar pagamento (teste)** para simular o pagamento
+5. Você será redirecionado para `/premium` com a geração da imagem em andamento
+
+Com `PREMIUM_IMAGE_TEST_MODE=true`:
+
+1. Acesse `/premium` após gerar resultado
+2. Clique em **Gerar minha casa com IA** sem passar pelo Pix
+
+Comandos úteis:
+
+```bash
+php artisan premium:unlock @usuario      # libera geração manualmente
+php artisan premium:generate-image @usuario  # dispara geração (debug)
+php artisan queue:work                   # processa jobs de geração
+```
 
 ## OAuth real com Threads (`THREADS_MOCK=false`)
 
@@ -188,9 +213,13 @@ Substitua `SEU_DOMINIO` pela URL de produção:
 | GET | `/resultado` | Resultado do usuário |
 | POST | `/resultado/recalcular` | Recalcula score |
 | GET | `/u/{username}` | Página pública |
-| GET | `/premium` | Versão premium |
+| GET | `/premium` | Versão premium / geração de imagem |
+| POST | `/premium/image/generate` | Inicia geração de imagem (JSON) |
+| GET | `/premium/image/status` | Status da geração (JSON) |
+| POST | `/premium/image/retry` | Repete geração falha (JSON) |
 | POST | `/checkout/pix` | Cria pagamento Pix |
 | GET | `/checkout/status/{order}` | Status do pagamento |
+| POST | `/checkout/confirm/{order}` | Confirma pagamento mock (teste) |
 | POST | `/webhooks/mercado-pago` | Webhook Mercado Pago |
 
 ## Estrutura de services
@@ -206,6 +235,14 @@ app/Services/
 │   └── PropertyClassifier.php
 ├── Billing/
 │   └── MercadoPagoService.php
+├── Premium/
+│   └── PremiumAccessService.php
+├── ImageGeneration/
+│   ├── ImageGenerationService.php
+│   ├── ImagePromptBuilder.php
+│   ├── HouseDescriptionBuilder.php
+│   ├── ShareCardGenerator.php
+│   └── Providers/ (Mock, OpenAI)
 └── CondominiumResultService.php
 ```
 
@@ -269,7 +306,7 @@ Não há networks customizadas — o Coolify gerencia rede e proxy reverso.
 | `POSTGRES_USER` | `condominio` | Usuário do banco |
 | `THREADS_MOCK` | `true` | Mock da API Threads |
 | `MERCADO_PAGO_MOCK` | `true` | Mock do Pix |
-| `QUEUE_CONNECTION` | `sync` | Sem worker no MVP |
+| `QUEUE_CONNECTION` | `database` | Fila para geração de imagem |
 | `THREADS_REDIRECT_URI` | `{APP_URL}/auth/threads/callback` | Definido automaticamente no entrypoint se vazio |
 
 ### Variáveis Threads API (quando sair do mock)
@@ -291,12 +328,25 @@ Não há networks customizadas — o Coolify gerencia rede e proxy reverso.
 | `MERCADO_PAGO_PREMIUM_PRICE` | `9.90` |
 | `MERCADO_PAGO_MOCK` | `false` |
 
+### Variáveis geração de imagem
+
+| Variável | Descrição |
+|----------|-----------|
+| `PREMIUM_IMAGE_TEST_MODE` | `true` libera geração sem pagamento |
+| `IMAGE_PROVIDER` | `mock` ou `openai` |
+| `OPENAI_API_KEY` | Chave OpenAI |
+| `OPENAI_IMAGE_MODEL` | `gpt-image-1` |
+| `OPENAI_IMAGE_SIZE` | `1024x1536` |
+| `OPENAI_IMAGE_QUALITY` | `medium` |
+| `IMAGE_GENERATION_DISK` | `public` |
+
 ### Comandos pós-deploy
 
 Execute **no container `app`** após o primeiro deploy (ou via Coolify → Execute Command):
 
 ```bash
 php artisan migrate --force
+php artisan storage:link --force
 php artisan optimize:clear
 php artisan optimize
 ```
@@ -332,7 +382,7 @@ docker compose exec app php artisan optimize
 3. Configura permissões de `storage/` e `bootstrap/cache/`
 4. Inicia **Nginx** e **PHP-FPM** via **Supervisor** na porta 80
 
-Sem Redis, Horizon, queue worker ou scheduler neste MVP.
+Sem Redis ou Horizon. O container Docker inclui **queue worker** via Supervisor para processar geração de imagem.
 
 ## Licença
 

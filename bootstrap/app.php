@@ -14,6 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->trustProxies(at: '*');
 
+        $middleware->alias([
+            'threads.session' => \App\Http\Middleware\EnsureThreadsSession::class,
+        ]);
+
         $middleware->validateCsrfTokens(except: [
             'webhooks/meta/deauthorize',
             'webhooks/meta/data-deletion',

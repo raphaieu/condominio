@@ -2,18 +2,15 @@
 
 namespace App\Services\Scoring;
 
+use App\Models\ThreadsAccount;
+use App\Models\ThreadsProfileSnapshot;
+
 class PropertyClassifier
 {
-    /** @var array<int, string> */
-    protected array $neighborhoods = [
-        'Alameda dos Devs',
-        'Vila da Resenha',
-        'Parque das Endorfinas',
-        'Jardim dos Lançadores',
-        'Praça da Conversa',
-        'Subúrbio do Silêncio',
-        'Bairro Premium',
-    ];
+    public function __construct(
+        protected NeighborhoodCatalog $neighborhoodCatalog,
+        protected ContentNicheDetector $nicheDetector,
+    ) {}
 
     /**
      * @return array{
@@ -22,23 +19,60 @@ class PropertyClassifier
      *     symbolic_address: string,
      *     social_class: string,
      *     estimated_value: int,
-     *     description: string
+     *     description: string,
+     *     neighborhood_tag: string
      * }
      */
-    public function classify(float $score, ?string $username = null): array
-    {
+    public function classify(
+        float $score,
+        ?string $username = null,
+        ?ThreadsAccount $account = null,
+        ?ThreadsProfileSnapshot $snapshot = null,
+    ): array {
+        $neighborhood = $this->resolveNeighborhood($score, $account, $snapshot);
         $tier = $this->resolveTier($score);
-        $neighborhood = $this->pickNeighborhood($score);
         $handle = $username ? '@'.$username : 'morador';
+        $neighborhoodName = $neighborhood['name'];
+        $neighborhoodTag = $neighborhood['tag'] ?? 'Morador';
 
         return [
             'property_type' => $tier['property_type'],
-            'neighborhood' => $neighborhood,
-            'symbolic_address' => $this->buildAddress($neighborhood, $score, $handle),
+            'neighborhood' => $neighborhoodName,
+            'symbolic_address' => $this->buildAddress($neighborhoodName, $score, $handle),
             'social_class' => $tier['social_class'],
             'estimated_value' => $tier['estimated_value'],
-            'description' => $this->buildDescription($tier, $neighborhood, $handle, $score),
+            'description' => $this->buildDescription($tier, $neighborhoodName, $handle, $score),
+            'neighborhood_tag' => $neighborhoodTag,
         ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function resolveNeighborhood(
+        float $score,
+        ?ThreadsAccount $account,
+        ?ThreadsProfileSnapshot $snapshot,
+    ): array {
+        if ($account && ! $account->isConnected()) {
+            return $this->neighborhoodCatalog->disconnectedNeighborhood();
+        }
+
+        $postsCount = $snapshot?->posts_count;
+
+        if ($postsCount === null && $account) {
+            $postsCount = $account->posts()->count();
+        }
+
+        if ($postsCount !== null && $postsCount === 0) {
+            return $this->neighborhoodCatalog->inactiveNeighborhood();
+        }
+
+        if ($account && $this->nicheDetector->isAdultNiche($account)) {
+            return $this->neighborhoodCatalog->adultNicheNeighborhood();
+        }
+
+        return $this->neighborhoodCatalog->findByScore($score);
     }
 
     /**
@@ -78,17 +112,6 @@ class PropertyClassifier
                 'estimated_value' => random_int(5_000_000, 12_000_000),
             ],
         };
-    }
-
-    protected function pickNeighborhood(float $score): string
-    {
-        if ($score >= 91) {
-            return 'Bairro Premium';
-        }
-
-        $index = (int) floor(($score / 100) * (count($this->neighborhoods) - 2));
-
-        return $this->neighborhoods[max(0, min($index, count($this->neighborhoods) - 2))];
     }
 
     protected function buildAddress(string $neighborhood, float $score, string $handle): string

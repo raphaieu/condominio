@@ -37,9 +37,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     supervisor \
     libpq-dev \
     libzip-dev \
+    libpng-dev \
+    libjpeg62-turbo-dev \
     unzip \
     && docker-php-ext-install \
     bcmath \
+    gd \
     opcache \
     pdo_pgsql \
     zip \

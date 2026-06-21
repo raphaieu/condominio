@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Services\Billing\MercadoPagoService;
+use App\Services\ImageGeneration\ImageGenerationService;
+use App\Services\Premium\PremiumAccessService;
 use App\Support\SessionContext;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +17,8 @@ class CheckoutController extends Controller
 {
     public function __construct(
         protected MercadoPagoService $mercadoPagoService,
+        protected PremiumAccessService $premiumAccessService,
+        protected ImageGenerationService $imageGenerationService,
     ) {}
 
     public function createPix(Request $request): RedirectResponse
@@ -60,6 +64,48 @@ class CheckoutController extends Controller
             'order' => $order,
             'payment' => $payment,
             'mercadoPagoMock' => config('services.mercado_pago.mock'),
+            'canConfirmMock' => $this->canConfirmMockPayment(),
         ]);
+    }
+
+    public function confirmMockPayment(Order $order): RedirectResponse
+    {
+        if (! $this->canConfirmMockPayment()) {
+            abort(403);
+        }
+
+        $account = SessionContext::currentThreadsAccount();
+        $result = SessionContext::currentResult();
+
+        if (! $account || ! $result || $order->user_id !== $account->user_id) {
+            return redirect('/')->with('error', 'Pedido inválido.');
+        }
+
+        if ($order->isPaid()) {
+            return redirect()->route('premium.show', ['generating' => 1]);
+        }
+
+        $payment = $order->latestPayment();
+
+        if ($payment) {
+            $payment->update(['status' => 'approved']);
+        }
+
+        $order->update([
+            'status' => 'paid',
+            'paid_at' => now(),
+        ]);
+
+        $this->premiumAccessService->unlockFromPayment($order);
+        $this->imageGenerationService->requestGeneration($account->user, $result);
+
+        return redirect()->route('premium.show', ['generating' => 1])
+            ->with('success', 'Pagamento confirmado! Sua casa está sendo gerada.');
+    }
+
+    protected function canConfirmMockPayment(): bool
+    {
+        return config('services.mercado_pago.mock')
+            || app()->environment('local');
     }
 }

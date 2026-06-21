@@ -22,7 +22,12 @@ class CondominiumResultService
         $snapshot ??= $this->metricsCollector->collect($account);
 
         $score = $this->scoringService->calculate($snapshot, $account);
-        $classification = $this->propertyClassifier->classify($score, $account->username);
+        $classification = $this->propertyClassifier->classify(
+            $score,
+            $account->username,
+            $account,
+            $snapshot,
+        );
 
         return $account->condominiumResults()->create([
             'user_id' => $account->user_id,

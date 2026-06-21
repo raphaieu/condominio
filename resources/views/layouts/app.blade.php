@@ -3,6 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="@yield('meta_description', 'Condomínio Threads — descubra seu imóvel simbólico com base nas suas métricas do Threads.')">
     <meta name="theme-color" content="#C4994C">
     @if (file_exists(public_path('logo-icon.png')))

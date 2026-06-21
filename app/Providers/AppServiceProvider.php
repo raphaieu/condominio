@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Services\ImageGeneration\Contracts\ImageProviderInterface;
+use App\Services\ImageGeneration\Providers\MockImageProvider;
+use App\Services\ImageGeneration\Providers\OpenAIImageProvider;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
@@ -12,7 +15,14 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind(ImageProviderInterface::class, function () {
+            $provider = config('services.premium_image.provider', 'mock');
+
+            return match ($provider) {
+                'openai' => new OpenAIImageProvider,
+                default => new MockImageProvider,
+            };
+        });
     }
 
     /**
