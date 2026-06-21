@@ -68,4 +68,17 @@ class ThreadsAccount extends Model
     {
         return $this->disconnected_at === null;
     }
+
+    public function hasValidToken(): bool
+    {
+        if (! $this->isConnected() || blank($this->access_token)) {
+            return false;
+        }
+
+        if ($this->token_expires_at === null) {
+            return true;
+        }
+
+        return $this->token_expires_at->isFuture();
+    }
 }

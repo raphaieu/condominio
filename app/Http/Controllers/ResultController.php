@@ -16,7 +16,7 @@ class ResultController extends Controller
 
     public function show(): View|RedirectResponse
     {
-        $account = SessionContext::currentThreadsAccount();
+        $account = SessionContext::resolveAccount();
         $result = $account?->latestResult;
 
         if (! $account || ! $result) {
@@ -31,7 +31,7 @@ class ResultController extends Controller
 
     public function recalculate(): RedirectResponse
     {
-        $account = SessionContext::currentThreadsAccount();
+        $account = SessionContext::resolveAccount();
 
         if (! $account) {
             return redirect('/')->with('error', 'Conecte sua conta Threads primeiro.');

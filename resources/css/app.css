@@ -1,3 +1,4 @@
+@import './tokens.css';
 @import 'tailwindcss';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
@@ -5,32 +6,302 @@
 @source '../views/**/*.blade.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+    --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-heading: 'Outfit', ui-sans-serif, system-ui, sans-serif;
 
-    --color-condo-dark: #0f3d3e;
-    --color-condo-teal: #14b8a6;
-    --color-condo-teal-light: #2dd4bf;
-    --color-condo-blue: #7dd3fc;
-    --color-condo-gold: #fbbf24;
-    --color-condo-coral: #fb7185;
-    --color-condo-surface: #0a2a2b;
-    --color-condo-card: #134e4a;
+    --color-condo-bg: #0A0A0A;
+    --color-condo-surface: #111111;
+    --color-condo-gold: #C4994C;
+    --color-condo-gold-bright: #E8C869;
+    --color-condo-gold-dark: #8B6914;
+    --color-condo-text: #F5F0E8;
+    --color-condo-text-secondary: #A89880;
+    --color-condo-text-muted: #6B5D4F;
+    --color-condo-border: rgba(196, 153, 76, 0.12);
+    --color-condo-card: rgba(22, 16, 10, 0.65);
+    --color-condo-accent-green: #4A7C1B;
+    --color-condo-accent-red: #C94444;
 }
 
 @layer base {
     body {
         @apply antialiased;
+        font-family: var(--font-body);
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+}
+
+@layer components {
+    .app-shell {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+    }
+
+    .app-header {
+        border-bottom: 1px solid var(--border);
+        background: rgba(10, 10, 10, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+    }
+
+    .app-header-inner {
+        max-width: var(--container-max);
+        margin: 0 auto;
+        padding: 1rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .app-logo,
+    .logo {
+        display: flex;
+        align-items: center;
+        gap: 0.625rem;
+        text-decoration: none;
+        color: var(--text-primary);
+        transition: color 0.3s var(--ease-out);
+    }
+
+    .app-logo:hover,
+    .logo:hover {
+        color: var(--gold-bright);
+    }
+
+    .app-logo-icon,
+    .logo-icon {
+        color: var(--gold);
+        flex-shrink: 0;
+    }
+
+    .app-logo-text,
+    .logo-text {
+        font-family: var(--font-heading);
+        font-weight: 700;
+        font-size: 1.1rem;
+        letter-spacing: -0.02em;
+    }
+
+    .app-logo-accent,
+    .logo-accent {
+        color: var(--gold);
+    }
+
+    .app-nav {
+        display: none;
+        align-items: center;
+        gap: 1.5rem;
+        font-size: 0.875rem;
+        color: var(--text-secondary);
+    }
+
+    @media (min-width: 640px) {
+        .app-nav {
+            display: flex;
+        }
+    }
+
+    .app-nav a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s var(--ease-out);
+    }
+
+    .app-nav a:hover {
+        color: var(--gold-bright);
+    }
+
+    .app-footer {
+        margin-top: auto;
+        border-top: 1px solid var(--border);
+        background: rgba(10, 10, 10, 0.5);
+    }
+
+    .app-footer-inner {
+        max-width: var(--container-max);
+        margin: 0 auto;
+        padding: 2rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+    }
+
+    @media (min-width: 640px) {
+        .app-footer-inner {
+            flex-direction: row;
+        }
+    }
+
+    .app-footer-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .app-footer-links a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s var(--ease-out);
+    }
+
+    .app-footer-links a:hover {
+        color: var(--gold);
+    }
+
+    .app-flash-wrap {
+        max-width: var(--container-max);
+        margin: 0 auto;
+        padding: 1rem 1.5rem 0;
+    }
+
+    .app-flash {
+        border-radius: var(--radius-md);
+        padding: 0.875rem 1rem;
+        font-size: 0.875rem;
+        border: 1px solid var(--border);
+    }
+
+    .app-flash-success {
+        background: rgba(74, 124, 27, 0.15);
+        border-color: rgba(74, 124, 27, 0.3);
+        color: #b8e986;
+    }
+
+    .app-flash-error {
+        background: rgba(201, 68, 68, 0.12);
+        border-color: rgba(201, 68, 68, 0.3);
+        color: #f5a5a5;
+    }
+
+    .app-card {
+        border-radius: var(--radius-lg);
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 1.5rem;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .app-section-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--gold);
+    }
+
+    .app-section-title {
+        font-family: var(--font-heading);
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .app-badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: var(--radius-full);
+        background: var(--gold-muted);
+        color: var(--gold-bright);
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .app-disclaimer {
+        border-radius: var(--radius-md);
+        background: var(--gold-muted);
+        border: 1px solid rgba(196, 153, 76, 0.25);
+        padding: 0.875rem 1rem;
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+    }
+
+    .app-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.5rem;
+        border-radius: var(--radius-full);
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s var(--ease-out);
+    }
+
+    .app-btn-primary {
+        background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+        color: #0A0A0A;
+        box-shadow: 0 4px 20px rgba(196, 153, 76, 0.25);
+    }
+
+    .app-btn-primary:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 32px rgba(196, 153, 76, 0.4);
+    }
+
+    .app-btn-secondary {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+    }
+
+    .app-btn-secondary:hover {
+        color: var(--text-primary);
+        border-color: var(--border-hover);
+        background: var(--bg-glass);
+    }
+
+    .app-btn-gold {
+        background: linear-gradient(135deg, var(--gold), var(--gold-bright));
+        color: #0A0A0A;
+        font-weight: 700;
+    }
+
+    .app-btn-gold:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 32px rgba(196, 153, 76, 0.4);
     }
 }
 
 @layer utilities {
-    .gradient-condo {
-        background: linear-gradient(135deg, var(--color-condo-dark) 0%, var(--color-condo-surface) 40%, #0c4a6e 100%);
+    .font-heading {
+        font-family: var(--font-heading);
     }
 
     .text-gradient-gold {
-        background: linear-gradient(90deg, var(--color-condo-gold), var(--color-condo-coral));
+        background: linear-gradient(135deg, var(--gold), var(--gold-bright), var(--gold));
+        background-size: 200% 200%;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .text-shimmer {
+        background: linear-gradient(
+            90deg,
+            var(--gold) 0%,
+            var(--gold-bright) 25%,
+            #fff 50%,
+            var(--gold-bright) 75%,
+            var(--gold) 100%
+        );
+        background-size: 400% 100%;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;

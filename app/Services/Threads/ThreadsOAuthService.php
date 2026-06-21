@@ -124,6 +124,40 @@ class ThreadsOAuthService
     }
 
     /**
+     * @return array{access_token: string, token_type?: string, expires_in?: int}
+     */
+    public function refreshLongLivedToken(string $accessToken): array
+    {
+        if ($this->isMockMode()) {
+            return [
+                'access_token' => $accessToken,
+                'token_type' => 'bearer',
+                'expires_in' => 5184000,
+            ];
+        }
+
+        $response = $this->client->http()->timeout(30)->get('https://graph.threads.net/refresh_access_token', [
+            'grant_type' => 'th_refresh_token',
+            'access_token' => $accessToken,
+        ]);
+
+        if ($response->failed()) {
+            $summary = ThreadsSafeLogger::summarizeMetaError($response);
+
+            Log::warning('Threads token refresh failed', $summary);
+
+            throw new ThreadsApiException(
+                'Falha ao renovar token de acesso.',
+                $response->status(),
+                is_string($summary['fbtrace_id'] ?? null) ? $summary['fbtrace_id'] : null,
+                $summary,
+            );
+        }
+
+        return $response->json();
+    }
+
+    /**
      * @return array{access_token: string, user_id: string, expires_in?: int}
      */
     public function resolveAccessToken(string $code): array

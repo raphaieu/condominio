@@ -12,15 +12,9 @@
 @section('content')
 <header id="header" class="header">
     <div class="header-inner">
-        <a href="{{ route('home') }}" class="logo" aria-label="Condomínio Threads">
-            <svg class="logo-icon" viewBox="0 0 24 24" width="28" height="28" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <path d="M16.87 10.27c-.06-.03-.13-.05-.19-.08a5.65 5.65 0 0 0-2.06-4.66 5.65 5.65 0 0 0-5.04-1.11A5.65 5.65 0 0 0 5.5 8.69a5.65 5.65 0 0 0 1.11 5.04 5.65 5.65 0 0 0 4.27 2.08c.26 0 .52-.02.78-.05a3.44 3.44 0 0 1-1.06 1.78 3.44 3.44 0 0 1-2.03.87c-.42.03-.77.37-.77.79v.01c0 .46.39.82.85.79a5.22 5.22 0 0 0 3.35-1.5 5.22 5.22 0 0 0 1.55-3.28c.01-.1.02-.2.02-.3v-.28c.8-.22 1.51-.65 2.08-1.24a4.83 4.83 0 0 0 1.22-2.89v-.04a.44.44 0 0 0-.44-.44.44.44 0 0 0-.44.44 3.94 3.94 0 0 1-1 2.36 3.94 3.94 0 0 1-2.2 1.14v-.27a3.6 3.6 0 0 0-.71-2.14 3.6 3.6 0 0 0-1.84-1.34c.02-.24.06-.47.13-.7a4.78 4.78 0 0 1 1.56-2.3 4.78 4.78 0 0 1 2.6-1.02c.97-.07 1.92.19 2.72.73a4.78 4.78 0 0 1 1.81 2.08c.08.17.12.27.15.37" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                <circle cx="12" cy="12" r="10.5" stroke="currentColor" stroke-width="1.5"/>
-            </svg>
-            <span class="logo-text">Condomínio<span class="logo-accent">Threads</span></span>
-        </a>
+        <x-brand-logo href="{{ route('home') }}" />
         <a href="{{ $threadsConnectUrl }}" class="btn btn-header">
-            Descubra sua Casa
+            {{ $alreadyConnected ? 'Ver meu resultado' : 'Descubra sua Casa' }}
         </a>
     </div>
 </header>
@@ -51,7 +45,7 @@
                     <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/>
                     <path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8.5c-1.93 0-3.5-1.57-3.5-3.5S10.07 8.5 12 8.5s3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z" fill="currentColor"/>
                 </svg>
-                Conectar com Threads
+                {{ $alreadyConnected ? 'Ver meu resultado' : 'Conectar com Threads' }}
             </a>
             <a href="#bairros" class="btn btn-ghost">
                 Ver os Bairros
@@ -357,13 +351,7 @@
     <div class="container">
         <div class="footer-content">
             <div class="footer-brand">
-                <div class="logo">
-                    <svg class="logo-icon" viewBox="0 0 24 24" width="24" height="24" fill="none" aria-hidden="true">
-                        <path d="M16.87 10.27c-.06-.03-.13-.05-.19-.08a5.65 5.65 0 0 0-2.06-4.66 5.65 5.65 0 0 0-5.04-1.11A5.65 5.65 0 0 0 5.5 8.69a5.65 5.65 0 0 0 1.11 5.04 5.65 5.65 0 0 0 4.27 2.08c.26 0 .52-.02.78-.05a3.44 3.44 0 0 1-1.06 1.78 3.44 3.44 0 0 1-2.03.87c-.42.03-.77.37-.77.79v.01c0 .46.39.82.85.79a5.22 5.22 0 0 0 3.35-1.5 5.22 5.22 0 0 0 1.55-3.28c.01-.1.02-.2.02-.3v-.28c.8-.22 1.51-.65 2.08-1.24a4.83 4.83 0 0 0 1.22-2.89v-.04a.44.44 0 0 0-.44-.44.44.44 0 0 0-.44.44 3.94 3.94 0 0 1-1 2.36 3.94 3.94 0 0 1-2.2 1.14v-.27a3.6 3.6 0 0 0-.71-2.14 3.6 3.6 0 0 0-1.84-1.34c.02-.24.06-.47.13-.7a4.78 4.78 0 0 1 1.56-2.3 4.78 4.78 0 0 1 2.6-1.02c.97-.07 1.92.19 2.72.73a4.78 4.78 0 0 1 1.81 2.08c.08.17.12.27.15.37" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-                        <circle cx="12" cy="12" r="10.5" stroke="currentColor" stroke-width="1.5"/>
-                    </svg>
-                    <span class="logo-text">Condomínio<span class="logo-accent">Threads</span></span>
-                </div>
+                <x-brand-logo size="sm" />
                 <p class="footer-tagline">Aqui cada perfil tem seu lugar. Qual é o seu?</p>
             </div>
             <div class="footer-links">

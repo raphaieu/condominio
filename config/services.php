@@ -41,6 +41,7 @@ return [
         'redirect_uri' => env('THREADS_REDIRECT_URI'),
         'graph_base' => env('THREADS_GRAPH_BASE', 'https://graph.threads.net/v1.0'),
         'mock' => filter_var(env('THREADS_MOCK', true), FILTER_VALIDATE_BOOLEAN),
+        'remember_days' => (int) env('THREADS_REMEMBER_DAYS', 30),
     ],
 
     'mercado_pago' => [

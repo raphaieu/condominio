@@ -6,6 +6,15 @@
     <title>@yield('title', 'Condomínio Threads — Descubra sua Casa')</title>
     <meta name="description" content="@yield('meta_description', 'Conecte sua conta do Threads e descubra em qual bairro do condomínio você mora. Análise de métricas, ranking e geração de imagem com IA.')">
     <meta name="theme-color" content="#C4994C">
+    @if (file_exists(public_path('logo-icon.png')))
+        <link rel="icon" href="{{ asset('logo-icon.png') }}" type="image/png">
+    @elseif (file_exists(public_path('logo-icon.svg')))
+        <link rel="icon" href="{{ asset('logo-icon.svg') }}" type="image/svg+xml">
+    @elseif (file_exists(public_path('logo-icon.png')))
+        <link rel="icon" href="{{ asset('logo-icon.png') }}" type="image/png">
+    @elseif (file_exists(public_path('logo-condominio-threads.png')))
+        <link rel="icon" href="{{ asset('logo-condominio-threads.png') }}" type="image/png">
+    @endif
 
     @hasSection('meta_og')
         @yield('meta_og')

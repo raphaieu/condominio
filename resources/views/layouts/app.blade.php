@@ -3,13 +3,23 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="@yield('meta_description', 'Condominio Threads — descubra seu imóvel simbólico com base nas suas métricas do Threads.')">
+    <meta name="description" content="@yield('meta_description', 'Condomínio Threads — descubra seu imóvel simbólico com base nas suas métricas do Threads.')">
+    <meta name="theme-color" content="#C4994C">
+    @if (file_exists(public_path('logo-icon.png')))
+        <link rel="icon" href="{{ asset('logo-icon.png') }}" type="image/png">
+    @elseif (file_exists(public_path('logo-icon.svg')))
+        <link rel="icon" href="{{ asset('logo-icon.svg') }}" type="image/svg+xml">
+    @elseif (file_exists(public_path('logo-icon.png')))
+        <link rel="icon" href="{{ asset('logo-icon.png') }}" type="image/png">
+    @elseif (file_exists(public_path('logo-condominio-threads.png')))
+        <link rel="icon" href="{{ asset('logo-condominio-threads.png') }}" type="image/png">
+    @endif
 
     @hasSection('meta_og')
         @yield('meta_og')
     @else
         <meta property="og:title" content="@yield('title', config('app.name'))">
-        <meta property="og:description" content="@yield('meta_description', 'Condominio Threads — descubra seu imóvel simbólico com base nas suas métricas do Threads.')">
+        <meta property="og:description" content="@yield('meta_description', 'Condomínio Threads — descubra seu imóvel simbólico com base nas suas métricas do Threads.')">
         <meta property="og:type" content="website">
         <meta property="og:url" content="{{ url()->current() }}">
     @endif
@@ -19,20 +29,20 @@
     @fonts
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen gradient-condo text-slate-100 font-sans">
+<body class="app-shell">
     <x-header />
 
     @if (session('success'))
-        <div class="max-w-4xl mx-auto px-4 pt-4">
-            <div class="rounded-lg bg-teal-500/20 border border-teal-400/40 px-4 py-3 text-teal-100 text-sm">
+        <div class="app-flash-wrap">
+            <div class="app-flash app-flash-success" role="status">
                 {{ session('success') }}
             </div>
         </div>
     @endif
 
     @if (session('error'))
-        <div class="max-w-4xl mx-auto px-4 pt-4">
-            <div class="rounded-lg bg-rose-500/20 border border-rose-400/40 px-4 py-3 text-rose-100 text-sm">
+        <div class="app-flash-wrap">
+            <div class="app-flash app-flash-error" role="alert">
                 {{ session('error') }}
             </div>
         </div>

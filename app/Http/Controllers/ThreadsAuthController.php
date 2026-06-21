@@ -22,6 +22,12 @@ class ThreadsAuthController extends Controller
 
     public function redirect(): RedirectResponse
     {
+        $account = SessionContext::resolveAccount();
+
+        if ($account && $this->restoreSessionIfPossible($account)) {
+            return redirect()->route('result.show');
+        }
+
         return redirect()->away($this->oauthService->getAuthorizationUrl());
     }
 
@@ -57,7 +63,7 @@ class ThreadsAuthController extends Controller
                 $account = $this->handleRealCallback($request->string('code')->toString());
             }
 
-            SessionContext::setThreadsAccount($account);
+            SessionContext::rememberAccount($account);
             $this->resultService->generateForAccount($account);
 
             return redirect()->route('result.show');
@@ -137,5 +143,40 @@ class ThreadsAuthController extends Controller
         ]);
 
         return $account;
+    }
+
+    protected function restoreSessionIfPossible(ThreadsAccount $account): bool
+    {
+        if ($account->hasValidToken()) {
+            SessionContext::rememberAccount($account);
+
+            return true;
+        }
+
+        if (blank($account->access_token)) {
+            return false;
+        }
+
+        try {
+            $refreshed = $this->oauthService->refreshLongLivedToken($account->access_token);
+
+            $account->update([
+                'access_token' => $refreshed['access_token'],
+                'token_expires_at' => isset($refreshed['expires_in'])
+                    ? now()->addSeconds((int) $refreshed['expires_in'])
+                    : null,
+            ]);
+
+            SessionContext::rememberAccount($account->fresh());
+
+            return true;
+        } catch (ThreadsApiException $e) {
+            Log::info('Threads token refresh failed, OAuth required', [
+                'threads_user_id' => $account->threads_user_id,
+                'status' => $e->statusCode,
+            ]);
+
+            return false;
+        }
     }
 }
