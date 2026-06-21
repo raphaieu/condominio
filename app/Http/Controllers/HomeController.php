@@ -8,8 +8,13 @@ class HomeController extends Controller
 {
     public function index(): View
     {
+        $threadsMock = config('services.threads.mock');
+
         return view('home', [
-            'threadsMock' => config('services.threads.mock'),
+            'threadsConnectUrl' => $threadsMock
+                ? route('auth.threads.callback', ['mock' => 1])
+                : route('auth.threads.redirect'),
+            'premiumPrice' => (float) config('services.mercado_pago.premium_price', 9.90),
         ]);
     }
 }
